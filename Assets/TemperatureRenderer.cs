@@ -17,6 +17,7 @@ public class TemperatureRenderer : MonoBehaviour
     [SerializeField] private Renderer humidityRenderer;
     [SerializeField] TextMeshProUGUI temperatureReadout;
     [SerializeField] TextMeshProUGUI humidityReadout;
+    [SerializeField] TextMeshProUGUI deviceLocationReadout;
     [SerializeField] private Color coolColor = new Color(0.20f, 0.55f, 0.95f);
     [SerializeField] private Color warmColor = new Color(0.95f, 0.30f, 0.20f);
 
@@ -30,6 +31,9 @@ public class TemperatureRenderer : MonoBehaviour
 
     [Header("Staleness Settings")]
     [SerializeField] private float staleAfterSeconds = 5f;
+
+    [Header("Location Settings")]
+    [SerializeField] private string readingDeviceRoom = "room";
 
     private readonly object _lock = new object();
     private bool _hasNewReading;
@@ -108,14 +112,20 @@ public class TemperatureRenderer : MonoBehaviour
         {
             temperatureReadout.text = isStale
                 ? "Stale/Disconnected"
-                : $"{current.temperature_f:F1} F";
+                : $"Temperature \n{current.temperature_f:F1} F";
         }
 
         if (humidityReadout != null)
         {
             humidityReadout.text = isStale
                 ? "Stale/Disconnected"
-                : $"{current.humidity:F1}%";
+                : $"Humidity \n{current.humidity:F1}%";
+        }
+        if(deviceLocationReadout != null)
+        {
+            deviceLocationReadout.text = isStale ?
+                "Cannot read device in " + readingDeviceRoom :
+                $"Reading from {current.device} in {readingDeviceRoom}";
         }
     }
 }
