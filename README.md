@@ -2,7 +2,8 @@
 
 A real-time room environmental digital twin that reads live temperature (`°F`) and relative humidity (`% RH`) from an **ESP32** and **DHT11** sensor node, publishes JSON telemetry over **MQTT** through a local **Eclipse Mosquitto** broker, and drives scene materials, `TextMeshPro` readouts, and stale/disconnected state indicators inside **Unity**.
 
-> VIDEO
+> <img width="1157" height="624" alt="image" src="https://github.com/user-attachments/assets/9f24ecdf-0101-47f9-994f-883440f7b55f" />
+
 
 ---
 
