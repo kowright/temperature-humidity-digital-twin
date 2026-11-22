@@ -1,16 +1,11 @@
+using Assets;
 using System;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class TemperatureRenderer : MonoBehaviour
 {
-    [Serializable]
-    public struct EnvironmentTelemetry
-    {
-        public string device;
-        public float temperature_f;
-        public float humidity;
-    }
 
     [Header("Target Scene Visuals")]
     [SerializeField] private Renderer tempRenderer;
@@ -37,32 +32,68 @@ public class TemperatureRenderer : MonoBehaviour
 
     private readonly object _lock = new object();
     private bool _hasNewReading;
-    private EnvironmentTelemetry _latestReading;
+    private EnvironmentPayload _latestReading;
     private bool _hasReceivedAnyReading;
 
     private DateTime _lastReadingTime;
-    public void OnMqttPayloadReceived(string jsonPayload)
+
+    [SerializeField] private EventHub eventHub;
+
+    void OnEnable()
+    {
+        if (eventHub != null)
+        {
+            eventHub.OnEnvironmentDataReceived += HandleEnvironmentData;
+        }
+    }
+
+    void OnDisable()
+    {
+        if (eventHub != null)
+        {
+            eventHub.OnEnvironmentDataReceived += HandleEnvironmentData; 
+        }
+    }
+    //public void OnMqttPayloadReceived(string jsonPayload)
+    //{
+    //    try
+    //    {
+    //        EnvironmentPayload parsed = JsonUtility.FromJson<EnvironmentPayload>(jsonPayload);
+    //        lock (_lock)
+    //        {
+    //            _latestReading = parsed;
+    //            _hasNewReading = true;
+    //            _hasReceivedAnyReading = true;
+    //            _lastReadingTime = DateTime.Now;
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Debug.LogWarning($"Failed to parse MQTT telemetry: {ex.Message}");
+    //    }
+    //}
+
+    private void HandleEnvironmentData(EnvironmentPayload payload, bool hasNewReading, bool hasAnyReading, DateTime lastReadingTime) 
     {
         try
         {
-            EnvironmentTelemetry parsed = JsonUtility.FromJson<EnvironmentTelemetry>(jsonPayload);
             lock (_lock)
             {
-                _latestReading = parsed;
-                _hasNewReading = true;
-                _hasReceivedAnyReading = true;
-                _lastReadingTime = DateTime.Now;
+                _latestReading = payload;
+                _hasNewReading = hasNewReading;
+                _hasReceivedAnyReading = hasAnyReading;
+                _lastReadingTime = lastReadingTime;
             }
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Debug.LogWarning($"Failed to parse MQTT telemetry: {ex.Message}");
+            Debug.LogWarning($"Failed to parse MQTT telemetry: {e.Message}");
         }
     }
 
     private void Update()
     {
-        EnvironmentTelemetry current;
+        EnvironmentPayload current;
         bool hasNew;
         bool hasAny;
         DateTime lastTime;
@@ -89,7 +120,7 @@ public class TemperatureRenderer : MonoBehaviour
         }
     }
 
-    private void ApplyVisuals(EnvironmentTelemetry reading)
+    private void ApplyVisuals(EnvironmentPayload reading)
     {
         float t = Mathf.InverseLerp(minTempF, maxTempF, reading.temperature_f);
         float h = Mathf.InverseLerp(minHumidity, maxHumidity, reading.humidity);
@@ -106,7 +137,7 @@ public class TemperatureRenderer : MonoBehaviour
         Debug.Log($"Room Twin Updated -> Temp: {reading.temperature_f:F1}°F | Humidity: {reading.humidity:F1}%");
     }
 
-    private void ApplyReadouts(EnvironmentTelemetry current, bool isStale)
+    private void ApplyReadouts(EnvironmentPayload current, bool isStale)
     {
         if (temperatureReadout != null)
         {
