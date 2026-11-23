@@ -25,6 +25,10 @@
         public static string servoCommandTopic = "bridge/node01/command/servo";
         public static string servoStateTopic = "bridge/node01/state/servo";
 
+        private float reconnectCooldownSeconds = 3.0f;
+        private float _nextReconnectTime;
+        private bool _pendingReconnect;
+
         //public event Action<string> OnButtonPressed;
         //public event Action<float> OnServoStateReported;
         //public event Action<EnvironmentPayload> OnEnvironmentTelemetryReceived;
@@ -41,41 +45,68 @@
         {
             base.OnDisconnected();
             connectionText.text = "Disconnected";
-            Debug.Log("disconnected!!!!!!!!!!!!!");
         }
 
         protected override void OnConnected()
         {
             base.OnConnected();
             connectionText.text = "Connected";
-            Debug.Log("connected");
         }
 
         protected override void OnConnectionLost()
         {
             base.OnConnectionLost();
             connectionText.text = "Connection Lost";
-            ReconnectClient();
-            Debug.Log("connection lost");
+
+            ScheduleReconnect();
         }
 
         protected override void OnConnecting()
         {
             base.OnConnecting();
             connectionText.text = "Connecting...";
-            Debug.Log("connecting...");
+    
         }
         protected override void OnConnectionFailed(string errorMessage)
         {
             base.OnConnectionFailed(errorMessage);
             connectionText.text = "Connection Failed. Retry Connection.";
+            ScheduleReconnect();
         }
 
+        // for reconnect button
         public void ReconnectClient()
         {
             Debug.Log("[MQTT] Forcing clean reconnect...");
             base.Disconnect();
             base.Connect();
+        }
+        
+        private void ScheduleReconnect()
+        {
+            _pendingReconnect = true;
+            _nextReconnectTime = Time.unscaledTime + reconnectCooldownSeconds;
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+
+            if (!_pendingReconnect) return;
+
+            if (client != null && client.IsConnected)
+            {
+                _pendingReconnect = false;
+                return;
+            }
+
+            if (Time.unscaledTime >= _nextReconnectTime)
+            {
+                _pendingReconnect = false;
+                connectionText.text = "Attempting to Reconnect...";
+                Debug.Log("[MQTT] Cooldown elapsed—attempting clean reconnect...");
+                ReconnectClient();
+            }
         }
 
         protected override void SubscribeTopics()
