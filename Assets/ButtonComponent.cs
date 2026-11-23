@@ -17,6 +17,7 @@ public class ButtonComponent : MonoBehaviour
     private Color originalColor;
     private Coroutine flashCoroutine;
     [SerializeField] private EventHub eventHub;
+    [SerializeField] private float degrees;
 
     void OnEnable()
     {
@@ -54,27 +55,23 @@ public class ButtonComponent : MonoBehaviour
 
     private void HandleButtonPressed(ButtonPayload payload)
     {
-        Debug.Log("button pressed");
-        try
+        Debug.Log(side + "button pressed");
+
+        if (string.IsNullOrEmpty(payload.button) || payload.button != side)
         {
-            //EnvironmentTelemetry parsed = JsonUtility.FromJson<EnvironmentTelemetry>(payload);
+            return;
+        }
 
-            Debug.Log("physical button pressed " + payload);
-            //lock (_lock)
-            //{
+ 
+        eventHub.RequestServoMove(degrees);
+        //}
 
-            //}
-
-            if(payload.button == side)
-            {
-                TriggerButtonVisualFlash();
-            }
+        if(payload.button == side)
+        {
+            TriggerButtonVisualFlash();
+        }
            
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning($"Failed to parse MQTT telemetry: {ex.Message}");
-        }
+    
     }
     public void On2DButtonPressed()
     {
@@ -95,7 +92,7 @@ public class ButtonComponent : MonoBehaviour
 
         TriggerButtonVisualFlash();
 
-        Debug.Log(side + " button pressed");
+        Debug.Log(side + " 2D button pressed");
     }
 
     public void TriggerButtonVisualFlash()

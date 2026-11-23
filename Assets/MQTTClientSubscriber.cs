@@ -25,6 +25,14 @@
         //public event Action<float> OnServoStateReported;
         //public event Action<EnvironmentPayload> OnEnvironmentTelemetryReceived;
 
+        private void OnEnable()
+        {
+            if (eventHub != null)
+            {
+                eventHub.Setup(PublishServoCommand);
+            }
+        }
+
         protected override void SubscribeTopics()
         {
             //base.SubscribeTopics();
@@ -64,6 +72,28 @@
             {
                 eventHub.HandleIncomingMqttMessage(receivedTopic, payload);
             }
+        }
+
+        public void PublishServoCommand(float targetAngle)
+        {
+            Debug.Log("PublishServoCommand in Client to " + targetAngle);
+            int clampedAngle = Mathf.Clamp(Mathf.RoundToInt(targetAngle), 0, 180);
+
+            if (client == null || !client.IsConnected)
+            {
+                Debug.LogWarning("Cannot publish servo command: MQTT client is not connected.");
+                return;
+            }
+
+            string topic = !string.IsNullOrWhiteSpace(servoCommandTopic)
+                ? servoCommandTopic
+                : "bridge/node01/command/servo";
+
+            string payload = $"{{\"target_angle\":{clampedAngle}}}";
+            byte[] body = Encoding.UTF8.GetBytes(payload);
+
+            client.Publish(topic, body, MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+            Debug.Log($"[MQTT TX] {topic} -> {payload}");
         }
     }
 }

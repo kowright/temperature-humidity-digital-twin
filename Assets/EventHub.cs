@@ -34,6 +34,7 @@ public class EventHub : MonoBehaviour
     public event Action<ButtonPayload> OnButtonPressed;
     public event Action<float> OnServoStateReported;
     public event Action<EnvironmentPayload, bool, bool, DateTime> OnEnvironmentDataReceived;
+    public Action<float> OnPublishServoCommand;
 
     private readonly object _lock = new object();
     private readonly Queue<ButtonPayload> _buttonQueue = new Queue<ButtonPayload>();
@@ -43,6 +44,11 @@ public class EventHub : MonoBehaviour
     private bool _hasReceivedAnyEnvReading;
     private EnvironmentPayload _latestEnvReading;
     private DateTime _lastEnvReadingTime;
+
+    public void Setup(Action<float> publishToServo)
+    {
+        OnPublishServoCommand = publishToServo;
+    }
 
 
     public void HandleIncomingMqttMessage(string topic, string payload)
@@ -154,6 +160,11 @@ public class EventHub : MonoBehaviour
             }
         }
     }
+    public void RequestServoMove(float targetAngle)
+    {
+        Debug.Log("requesting servo to move to " + targetAngle);
+        OnPublishServoCommand?.Invoke(targetAngle);
+    }
 
     //private void ApplyEnvironmentVisuals(EnvironmentTelemetryPayload reading)
     //{
@@ -189,13 +200,13 @@ public class EventHub : MonoBehaviour
     //}
 
     // Call from a virtual UI button, slider, or 3D control to actuate the physical SG90
-    public void PublishServoCommand(float targetAngle)
-    {
-        int clampedAngle = Mathf.RoundToInt(Mathf.Clamp(targetAngle, 0f, 180f));
-        string json = $"{{\"target_angle\":{clampedAngle}}}";
+    //public void PublishServoCommand(float targetAngle)
+    //{
+    //    int clampedAngle = Mathf.RoundToInt(Mathf.Clamp(targetAngle, 0f, 180f));
+    //    string json = $"{{\"target_angle\":{clampedAngle}}}";
 
-        // Connect to your M2MqttUnity client publish method:
-        // mqttClient.Publish(servoCommandTopic, Encoding.UTF8.GetBytes(json), MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
-        Debug.Log($"[MQTT TX] Topic: {MQTTClientSubscriber.servoCommandTopic} | Payload: {json}");
-    }
+    //    // Connect to your M2MqttUnity client publish method:
+    //    // mqttClient.Publish(servoCommandTopic, Encoding.UTF8.GetBytes(json), MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+    //    Debug.Log($"[MQTT TX] Topic: {MQTTClientSubscriber.servoCommandTopic} | Payload: {json}");
+    //}
 }
