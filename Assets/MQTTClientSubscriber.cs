@@ -3,7 +3,9 @@
     using M2MqttUnity;
     using System;
     using System.Text;
+    using TMPro;
     using UnityEngine;
+    using uPLibrary.Networking.M2Mqtt;
     using uPLibrary.Networking.M2Mqtt.Messages;
     using static ButtonComponent;
     using static TemperatureRenderer;
@@ -14,6 +16,8 @@
        // [SerializeField] private string topic = "building/room1/environment/kw";
         //[SerializeField] private TemperatureRenderer roomTwin;
         [SerializeField] private EventHub eventHub;
+        [SerializeField] private TextMeshProUGUI connectionText;
+        private bool IsBrokerConnected => client != null && client.IsConnected;
 
         [Header("MQTT Topics")]
         public static string environmentTopic = "building/room1/environment/kw";
@@ -31,6 +35,47 @@
             {
                 eventHub.Setup(PublishServoCommand);
             }
+        }
+
+        protected override void OnDisconnected()
+        {
+            base.OnDisconnected();
+            connectionText.text = "Disconnected";
+            Debug.Log("disconnected!!!!!!!!!!!!!");
+        }
+
+        protected override void OnConnected()
+        {
+            base.OnConnected();
+            connectionText.text = "Connected";
+            Debug.Log("connected");
+        }
+
+        protected override void OnConnectionLost()
+        {
+            base.OnConnectionLost();
+            connectionText.text = "Connection Lost";
+            ReconnectClient();
+            Debug.Log("connection lost");
+        }
+
+        protected override void OnConnecting()
+        {
+            base.OnConnecting();
+            connectionText.text = "Connecting...";
+            Debug.Log("connecting...");
+        }
+        protected override void OnConnectionFailed(string errorMessage)
+        {
+            base.OnConnectionFailed(errorMessage);
+            connectionText.text = "Connection Failed. Retry Connection.";
+        }
+
+        public void ReconnectClient()
+        {
+            Debug.Log("[MQTT] Forcing clean reconnect...");
+            base.Disconnect();
+            base.Connect();
         }
 
         protected override void SubscribeTopics()
@@ -81,7 +126,8 @@
 
             if (client == null || !client.IsConnected)
             {
-                Debug.LogWarning("Cannot publish servo command: MQTT client is not connected.");
+                //Debug.LogWarning("Cannot publish servo command: MQTT client is not connected.");
+                Debug.LogWarning($"Cannot publish servo command. clientNull={client == null}, isConnected={client?.IsConnected}");
                 return;
             }
 
