@@ -30,13 +30,11 @@ public class ServoComponent : MonoBehaviour
 
     private void HandleServoState(float angle)
     {
-        Debug.Log("Servo state changed to " + angle);
         if (servoText != null)
         {
             servoText.text = "Servo Degree: " + angle;
             if (animator != null)
             {
- 
                 if (angle == 0)
                 {
                     PlayForward();

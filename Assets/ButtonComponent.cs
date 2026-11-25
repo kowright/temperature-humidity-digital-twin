@@ -7,12 +7,10 @@ using UnityEngine;
 
 public class ButtonComponent : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     [SerializeField] GameObject topOfButton;
     [SerializeField] private string side;
     [SerializeField] private Color flashColor = Color.red;
     [SerializeField] private float duration = 0.5f;
-    private readonly object _lock = new object();
     private Renderer objRenderer;
     private Color originalColor;
     private Coroutine flashCoroutine;
@@ -38,66 +36,30 @@ public class ButtonComponent : MonoBehaviour
     void Awake()
     {
         objRenderer = topOfButton.GetComponent<Renderer>();
-        // Cache the starting color
         originalColor = objRenderer.material.color;
-    }
-
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     private void HandleButtonPressed(ButtonPayload payload)
     {
-        Debug.Log(side + "button pressed");
-
         if (string.IsNullOrEmpty(payload.button) || payload.button != side)
         {
             return;
         }
-
  
         eventHub.RequestServoMove(degrees);
-        //}
 
         if(payload.button == side)
         {
             TriggerButtonVisualFlash();
         }
-           
-    
     }
     public void On2DButtonPressed()
     {
-        //try
-        //{
-        //    EnvironmentTelemetry parsed = JsonUtility.FromJson<EnvironmentTelemetry>(jsonPayload);
-        //    Debug.Log("parsed" + parsed);
-        //    //lock (_lock)
-        //    //{
-
-        //    //}
-        //}
-        //catch (Exception ex)
-        //{
-        //    Debug.LogWarning($"Failed to parse MQTT telemetry: {ex.Message}");
-
-        //}
-
         TriggerButtonVisualFlash();
-
-        Debug.Log(side + " 2D button pressed");
     }
 
     public void TriggerButtonVisualFlash()
     {
-        // Stop an existing flash if triggered again rapidly so colors don't get stuck
         if (flashCoroutine != null)
         {
             StopCoroutine(flashCoroutine);

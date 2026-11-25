@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using Assets;
 
@@ -50,7 +49,6 @@ public class EventHub : MonoBehaviour
         OnPublishServoCommand = publishToServo;
     }
 
-
     public void HandleIncomingMqttMessage(string topic, string payload)
     {
         if (string.IsNullOrWhiteSpace(payload)) return;
@@ -71,10 +69,8 @@ public class EventHub : MonoBehaviour
             }
             else if (topic == MQTTClientSubscriber.buttonInputTopic)
             {
-                Debug.Log($"Raw button payload: [{payload}]");
                 ButtonPayload btn = JsonUtility.FromJson<ButtonPayload>(payload);
 
-                
                 lock (_lock)
                 {
                     _buttonQueue.Enqueue(btn);
@@ -134,15 +130,8 @@ public class EventHub : MonoBehaviour
 
         if (hasNewEnv)
         {
-            //ApplyEnvironmentVisuals(envCurrent);
             OnEnvironmentDataReceived?.Invoke(envCurrent, hasNewEnv, hasAnyEnv, lastEnvTime);
         }
-
-        //if (hasAnyEnv)
-        //{
-        //    bool isStale = (DateTime.Now - lastEnvTime).TotalSeconds > staleAfterSeconds;
-        //    UpdateEnvironmentReadouts(envCurrent, isStale);
-        //}
 
         if (buttonsToDispatch != null)
         {
@@ -162,51 +151,6 @@ public class EventHub : MonoBehaviour
     }
     public void RequestServoMove(float targetAngle)
     {
-        Debug.Log("requesting servo to move to " + targetAngle);
         OnPublishServoCommand?.Invoke(targetAngle);
     }
-
-    //private void ApplyEnvironmentVisuals(EnvironmentTelemetryPayload reading)
-    //{
-    //    float t = Mathf.InverseLerp(minTempF, maxTempF, reading.temperature_f);
-    //    float h = Mathf.InverseLerp(minHumidity, maxHumidity, reading.humidity);
-
-    //    if (tempRenderer != null)
-    //    {
-    //        tempRenderer.material.color = Color.Lerp(coolColor, warmColor, t);
-    //    }
-
-    //    if (humidityRenderer != null)
-    //    {
-    //        humidityRenderer.material.color = Color.Lerp(coolColor, warmColor, h);
-    //    }
-    //}
-
-    //private void UpdateEnvironmentReadouts(EnvironmentTelemetryPayload reading, bool isStale)
-    //{
-    //    if (temperatureReadout != null)
-    //    {
-    //        temperatureReadout.text = isStale
-    //            ? "Stale/Disconnected"
-    //            : $"{reading.temperature_f:F1} F";
-    //    }
-
-    //    if (humidityReadout != null)
-    //    {
-    //        humidityReadout.text = isStale
-    //            ? "Stale/Disconnected"
-    //            : $"{reading.humidity:F1}%";
-    //    }
-    //}
-
-    // Call from a virtual UI button, slider, or 3D control to actuate the physical SG90
-    //public void PublishServoCommand(float targetAngle)
-    //{
-    //    int clampedAngle = Mathf.RoundToInt(Mathf.Clamp(targetAngle, 0f, 180f));
-    //    string json = $"{{\"target_angle\":{clampedAngle}}}";
-
-    //    // Connect to your M2MqttUnity client publish method:
-    //    // mqttClient.Publish(servoCommandTopic, Encoding.UTF8.GetBytes(json), MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
-    //    Debug.Log($"[MQTT TX] Topic: {MQTTClientSubscriber.servoCommandTopic} | Payload: {json}");
-    //}
 }

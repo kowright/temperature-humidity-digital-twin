@@ -54,24 +54,6 @@ public class TemperatureRenderer : MonoBehaviour
             eventHub.OnEnvironmentDataReceived += HandleEnvironmentData; 
         }
     }
-    //public void OnMqttPayloadReceived(string jsonPayload)
-    //{
-    //    try
-    //    {
-    //        EnvironmentPayload parsed = JsonUtility.FromJson<EnvironmentPayload>(jsonPayload);
-    //        lock (_lock)
-    //        {
-    //            _latestReading = parsed;
-    //            _hasNewReading = true;
-    //            _hasReceivedAnyReading = true;
-    //            _lastReadingTime = DateTime.Now;
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        Debug.LogWarning($"Failed to parse MQTT telemetry: {ex.Message}");
-    //    }
-    //}
 
     private void HandleEnvironmentData(EnvironmentPayload payload, bool hasNewReading, bool hasAnyReading, DateTime lastReadingTime) 
     {
@@ -134,7 +116,6 @@ public class TemperatureRenderer : MonoBehaviour
             humidityRenderer.material.color = Color.Lerp(coolColor, warmColor, h);
         }
 
-        Debug.Log($"Room Twin Updated -> Temp: {reading.temperature_f:F1}°F | Humidity: {reading.humidity:F1}%");
     }
 
     private void ApplyReadouts(EnvironmentPayload current, bool isStale)

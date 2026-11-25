@@ -13,8 +13,6 @@
     public class MQTTClientSubscriber : M2MqttUnityClient
     {
 
-       // [SerializeField] private string topic = "building/room1/environment/kw";
-        //[SerializeField] private TemperatureRenderer roomTwin;
         [SerializeField] private EventHub eventHub;
         [SerializeField] private TextMeshProUGUI connectionText;
         private bool IsBrokerConnected => client != null && client.IsConnected;
@@ -28,10 +26,6 @@
         private float reconnectCooldownSeconds = 3.0f;
         private float _nextReconnectTime;
         private bool _pendingReconnect;
-
-        //public event Action<string> OnButtonPressed;
-        //public event Action<float> OnServoStateReported;
-        //public event Action<EnvironmentPayload> OnEnvironmentTelemetryReceived;
 
         private void OnEnable()
         {
@@ -77,7 +71,6 @@
         // for reconnect button
         public void ReconnectClient()
         {
-            Debug.Log("[MQTT] Forcing clean reconnect...");
             base.Disconnect();
             base.Connect();
         }
@@ -104,19 +97,12 @@
             {
                 _pendingReconnect = false;
                 connectionText.text = "Attempting to Reconnect...";
-                Debug.Log("[MQTT] Cooldown elapsed—attempting clean reconnect...");
                 ReconnectClient();
             }
         }
 
         protected override void SubscribeTopics()
         {
-            //base.SubscribeTopics();
-            //client.Subscribe(new string[] { topic }, new byte[] { MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE });
-            //ushort msgId = client.Subscribe(new string[] { topic }, new byte[] { MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE });
-            //Debug.Log($"Subscribed to MQTT topic: {topic}");
-            //Debug.Log($"Subscribed to '{topic}' (msgId={msgId})");
-
             base.SubscribeTopics();
 
             string[] topicsToSubscribe = new string[]
@@ -152,12 +138,10 @@
 
         public void PublishServoCommand(float targetAngle)
         {
-            Debug.Log("PublishServoCommand in Client to " + targetAngle);
             int clampedAngle = Mathf.Clamp(Mathf.RoundToInt(targetAngle), 0, 180);
 
             if (client == null || !client.IsConnected)
             {
-                //Debug.LogWarning("Cannot publish servo command: MQTT client is not connected.");
                 Debug.LogWarning($"Cannot publish servo command. clientNull={client == null}, isConnected={client?.IsConnected}");
                 return;
             }
